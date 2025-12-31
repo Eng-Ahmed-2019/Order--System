@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Serilog;
 using System.Text.Json;
 using OrderSystem.Domain.Entities;
 using OrderSystem.Application.Interfaces;
@@ -57,6 +58,7 @@ namespace OrderSystem.Application.CQRS.Handlers
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "Payment processing failed for OrderId {OrderId}", request.orderId);
                 await _logRepo.CreateAsync(new PaymentLog
                 {
                     RequestJson = requestJson,

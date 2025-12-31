@@ -1,15 +1,35 @@
+using Serilog;
 using System.Text;
+using FluentValidation;
 using Microsoft.OpenApi.Models;
+using Serilog.Sinks.MSSqlServer;
+using FluentValidation.AspNetCore;
+using OrderSystem.API.Middlewares;
 using Microsoft.IdentityModel.Tokens;
 using OrderSystem.Infrastructure.Data;
 using OrderSystem.Application.Services;
 using OrderSystem.Application.Interfaces;
+using OrderSystem.Application.Validators;
 using OrderSystem.Application.CQRS.Handlers;
 using OrderSystem.Infrastructure.Repositories;
+using OrderSystem.Infrastructure.BackgroundJobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.File(
+        path: "Logs/log-.txt",
+        rollingInterval: RollingInterval.Day)
+    .WriteTo.MSSqlServer(
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
+        sinkOptions: new MSSqlServerSinkOptions
+        {
+            TableName = "Logs",
+            AutoCreateSqlTable = false
+        })
+    .CreateLogger();
+builder.Host.UseSerilog();
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -69,6 +89,13 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentLogRepository, PaymentLogRepository>();
+builder.Services.AddHostedService<PaymentRetryBackgroundService>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ProcessPaymentValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterValidator>();
 builder.Services.AddHttpClient("ExternalApi", client =>
 {
     client.BaseAddress = new Uri("https://jsonplaceholder.typicode.com/");
@@ -88,6 +115,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

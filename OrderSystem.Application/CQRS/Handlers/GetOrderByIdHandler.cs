@@ -14,7 +14,7 @@ namespace OrderSystem.Application.CQRS.Handlers
             _orderRepository = orderRepository;
         }
 
-        public async Task<OrderResponseDto>Handle(GetOrderByIdQuery request,CancellationToken cancellationToken)
+        public async Task<OrderResponseDto> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             var order = await _orderRepository.GetByIdAsync(request.id);

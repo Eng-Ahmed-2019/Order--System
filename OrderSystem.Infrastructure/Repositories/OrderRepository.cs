@@ -1,7 +1,7 @@
 ﻿using Dapper;
-using OrderSystem.Application.Interfaces;
 using OrderSystem.Domain.Entities;
 using OrderSystem.Infrastructure.Data;
+using OrderSystem.Application.Interfaces;
 
 namespace OrderSystem.Infrastructure.Repositories
 {

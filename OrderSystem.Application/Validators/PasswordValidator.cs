@@ -2,41 +2,24 @@
 {
     public static class PasswordValidator
     {
-        public static bool IsStrongPassword(string password, out string errorMessage)
+        public static string? Validate(string password)
         {
-            errorMessage = "";
-
             if (password.Length < 8)
-            {
-                errorMessage = "Password must be 8 characters";
-                return false;
-            }
+                return "Password must be at least 8 characters";
 
             if (!password.Any(char.IsUpper))
-            {
-                errorMessage = "Password Must has an upper character";
-                return false;
-            }
+                return "Password must contain at least one uppercase letter";
 
             if (!password.Any(char.IsLower))
-            {
-                errorMessage = "Password must has an lower character";
-                return false;
-            }
+                return "Password must contain at least one lowercase letter";
 
             if (!password.Any(char.IsDigit))
-            {
-                errorMessage = "Password must has a number";
-                return false;
-            }
+                return "Password must contain at least one number";
 
             if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
-            {
-                errorMessage = "The password must contain a special symbol such as !@#$%";
-                return false;
-            }
+                return "Password must contain at least one special character (!@#$%)";
 
-            return true;
+            return null;
         }
     }
 }

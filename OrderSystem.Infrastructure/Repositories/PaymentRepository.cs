@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using OrderSystem.Domain.Enums;
 using OrderSystem.Domain.Entities;
 using OrderSystem.Infrastructure.Data;
 using OrderSystem.Application.Interfaces;
@@ -24,6 +25,20 @@ namespace OrderSystem.Infrastructure.Repositories
 
             using var conn = _dapperContext.CreateConnection();
             return await conn.ExecuteScalarAsync<int>(sql, payment);
+        }
+
+        public async Task<IEnumerable<Payment>> GetFailedAsync()
+        {
+            var sql = @"SELECT * FROM Payments WHERE Status = @Status";
+            using var conn = _dapperContext.CreateConnection();
+            return await conn.QueryAsync<Payment>(sql, new { Status = PaymentStatus.Failed });
+        }
+
+        public async Task UpdateStatusAsync(int paymentId,string status)
+        {
+            var sql = "UPDATE Payments SET Status = @Status WHERE Id = @Id";
+            using var conn = _dapperContext.CreateConnection();
+            await conn.ExecuteAsync(sql, new { Id = paymentId, Status = status });
         }
     }
 }
