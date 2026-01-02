@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Serilog;
 using OrderSystem.Domain.Enums;
 using OrderSystem.Domain.Entities;
 using OrderSystem.Application.Interfaces;
@@ -17,14 +18,20 @@ namespace OrderSystem.Application.CQRS.Handlers
 
         public async Task<int> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
+            Log.Information(
+                "Creating new order {@Order}",
+                request.order
+            );
             if (request == null) throw new ArgumentNullException(nameof(request));
-
             var order = new Order
             {
                 OrderNumber = request.order.OrderNumber,
                 TotalAmount = request.order.TotalAmount,
                 Status = OrderStatus.PaymentPending
             };
+            Log.Information(
+                $"Order created successfully with Id {request.order.OrderNumber}"
+            );
             return await _orderRepository.CreateAsync(order);
         }
     }

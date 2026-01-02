@@ -28,6 +28,11 @@ namespace OrderSystem.Application.CQRS.Handlers
 
         public async Task<bool> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
         {
+            Log.Information(
+                $"Starting payment process for OrderId {request.orderId} with amount {request.amount}",
+                request.orderId,
+                request.amount
+            );
             var client = _httpClientFactory.CreateClient("ExternalApi");
             var paymentRequest = new
             {
@@ -54,6 +59,10 @@ namespace OrderSystem.Application.CQRS.Handlers
                     Status = "Success",
                     TransactionId = Guid.NewGuid().ToString()
                 });
+                Log.Information(
+                    $"Payment processed successfully for OrderId {request.orderId}",
+                    request.orderId
+                );
                 return true;
             }
             catch (Exception ex)

@@ -1,49 +1,49 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using OrderSystem.Domain.Entities;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using OrderSystem.Application.DTOs;
-using OrderSystem.Application.Services;
-using OrderSystem.Application.Interfaces;
-using OrderSystem.Application.Validators;
+using Microsoft.AspNetCore.Authorization;
+using OrderSystem.Application.CQRS.Commands;
 
 namespace OrderSystem.API.Controllers
 {
     public class AuthController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
-        private readonly JwtTokenGenerator _jwtTokenGenerator;
+        private readonly IMediator _mediator;
 
-        public AuthController(IUserRepository userRepository, JwtTokenGenerator jwtTokenGenerator)
+        public AuthController(IMediator mediator)
         {
-            _userRepository = userRepository;
-            _jwtTokenGenerator = jwtTokenGenerator;
+            _mediator = mediator;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterRequestDto registerRequestDto)
+        public async Task<IActionResult> Register(RegisterRequestDto dto)
         {
-            var user = new User
-            {
-                Email = registerRequestDto.Email,
-                FullName = registerRequestDto.FullName,
-                NationalId = registerRequestDto.NationalId,
-                PasswordHash = PasswordHasher.Hash(registerRequestDto.Password),
-            };
-            await _userRepository.CreateAsync(user);
-            return Ok("User registered Successfully");
+            await _mediator.Send(new RegisterUserCommand(
+                dto.FullName,
+                dto.NationalId,
+                dto.Password,
+                dto.Email
+            ));
+            return Ok("User Registered Successfully");
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto dto)
         {
-            var user = await _userRepository.GetByEmailAsync(dto.Email);
-            if (user == null) return BadRequest("Invalid email or password");
-            if (user.PasswordHash != PasswordHasher.Hash(dto.Password)) return BadRequest("Invalid email or password");
-            var result = _jwtTokenGenerator.GenerateToken(user.Id, user.Email);
-            return Ok(new LoginResponseDto
-            {
-                Token = result.token,
-                ExpiresAt = result.expiresAt,
-            });
+            var r = await _mediator.Send(new LoginUserCommand(
+                dto.Email,
+                dto.Password
+            ));
+            return Ok(r);
+        }
+
+        [Authorize]
+        [HttpPost("log-out")]
+        public async Task<IActionResult> LogOut()
+        {
+            var sid = User.FindFirst("sid")!.Value;
+            await _mediator.Send(new LogoutUserCommand(Guid.Parse(sid)));
+            return Ok("Logged out successfully");
         }
     }
 }

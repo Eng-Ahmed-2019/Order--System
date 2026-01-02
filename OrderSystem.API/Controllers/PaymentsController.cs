@@ -21,11 +21,15 @@ namespace OrderSystem.API.Controllers
         [HttpPost("process-payment")]
         public async Task<IActionResult>ProcessPayment(ProcessPaymentRequestDto process)
         {
-            if (process.OrderId == 0) return BadRequest($"Not found any order match with {process.OrderId}");
-            if (process.Amount == 0) return BadRequest("Amount must be greater than zero");
             var r = await _mediator.Send(new ProcessPaymentCommand(process.OrderId, process.Amount));
-            if (!r) return BadRequest("Payment failed");
-            return Ok("Payment processed");
+            return r ? Ok("Success Process") : BadRequest("Failed Process");
+        }
+
+        [HttpPost("process-stripe")]
+        public async Task<IActionResult> ProcessStripe(ProcessPaymentRequestDto dto)
+        {
+            var result = await _mediator.Send(new ProcessStripePaymentCommand(dto.OrderId, dto.Amount));
+            return result ? Ok("Success Process") : BadRequest("Failed Process");
         }
     }
 }

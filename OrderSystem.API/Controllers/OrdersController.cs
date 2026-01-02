@@ -1,11 +1,15 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using OrderSystem.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using OrderSystem.Application.CQRS.Queries;
 using OrderSystem.Application.CQRS.Commands;
 
 namespace OrderSystem.API.Controllers
 {
+    [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
     public class OrdersController : ControllerBase
     {
         private readonly IMediator _mediator;

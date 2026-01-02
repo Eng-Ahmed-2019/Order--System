@@ -1,7 +1,8 @@
 ﻿using MediatR;
+using Serilog;
+using OrderSystem.Application.CQRS.Queries;
 using OrderSystem.Application.DTOs;
 using OrderSystem.Application.Interfaces;
-using OrderSystem.Application.CQRS.Queries;
 
 namespace OrderSystem.Application.CQRS.Handlers
 {
@@ -16,9 +17,18 @@ namespace OrderSystem.Application.CQRS.Handlers
 
         public async Task<OrderResponseDto> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
         {
-            if (request == null) throw new ArgumentNullException(nameof(request));
+            Log.Information("Fetching order with Id {OrderId}", request.id);
+            if (request == null)
+            {
+                Log.Warning("This request was empty");
+                throw new ArgumentNullException(nameof(request));
+            }
             var order = await _orderRepository.GetByIdAsync(request.id);
-            if (order == null) throw new ArgumentNullException(nameof(order));
+            if (order == null)
+            {
+                Log.Warning("Order not found with Id {OrderId}", request.id);
+                throw new ArgumentNullException(nameof(order));
+            }
             return new OrderResponseDto
             {
                 Id = order.Id,

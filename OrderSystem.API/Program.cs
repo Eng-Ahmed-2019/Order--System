@@ -89,6 +89,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentLogRepository, PaymentLogRepository>();
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddHostedService<PaymentRetryBackgroundService>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
@@ -106,6 +107,10 @@ builder.Services.AddMediatR(r =>
     r.RegisterServicesFromAssembly(typeof(CreateOrderHandler).Assembly);
     r.RegisterServicesFromAssembly(typeof(GetOrderByIdHandler).Assembly);
     r.RegisterServicesFromAssemblies(typeof(ProcessPaymentHandler).Assembly);
+    r.RegisterServicesFromAssembly(typeof(LoginUserHandler).Assembly);
+    r.RegisterServicesFromAssembly(typeof(LogoutUserHandler).Assembly);
+    r.RegisterServicesFromAssembly(typeof(ProcessStripePaymentHandler).Assembly);
+    r.RegisterServicesFromAssembly(typeof(RegisterUserHandler).Assembly);
 });
 
 var app = builder.Build();
@@ -116,6 +121,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<SessionValidationMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
